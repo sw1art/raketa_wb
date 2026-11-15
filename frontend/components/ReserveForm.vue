@@ -1,0 +1,71 @@
+<script setup lang="ts">
+import type { Product, Warehouse } from '~/types/api'
+import { useApi } from '~/composables/useApi'
+import { useAsyncAction } from '~/composables/useAsyncAction'
+
+const props = defineProps<{
+  products: Product[]
+  warehouses: Warehouse[]
+}>()
+
+const emit = defineEmits<{
+  (e: 'success'): void
+}>()
+
+const api = useApi()
+const { submitting, error, run } = useAsyncAction()
+
+const warehouseId = ref('')
+const productId = ref('')
+const quantity = ref('')
+
+const quantityNumber = computed<number | null>(() => {
+  const n = Number(quantity.value)
+  return Number.isInteger(n) && n > 0 ? n : null
+})
+
+const isValid = computed<boolean>(
+  () => warehouseId.value !== '' && productId.value !== '' && quantityNumber.value !== null,
+)
+
+function reset(): void {
+  warehouseId.value = ''
+  productId.value = ''
+  quantity.value = ''
+}
+
+async function submit(): Promise<void> {
+  const qty = quantityNumber.value
+  if (qty === null) return
+  const wh = props.warehouses.find((w) => w.id === warehouseId.value)
+  const p = props.products.find((x) => x.id === productId.value)
+  if (!window.confirm(`Зарезервировать ${qty} шт. товара «${p?.sku ?? ''}» на складе «${wh?.name ?? ''}» (FBS)?`)) return
+
+  const ok = await run(() =>
+    api.reserveStock({ warehouse_id: warehouseId.value, product_id: productId.value, quantity: qty }),
+  )
+  if (ok) {
+    emit('success')
+    reset()
+  }
+}
+</script>
+
+<template>
+  <form class="card" @submit.prevent="submit">
+    <h3 class="card__title">Резерв FBS</h3>
+    <WarehousePicker v-model="warehouseId" :warehouses="warehouses" label="Склад" />
+    <ProductPicker v-model="productId" :products="products" label="Товар" />
+    <div class="field">
+      <label class="label">Количество</label>
+      <input v-model="quantity" type="number" min="1" step="1" inputmode="numeric" class="input" placeholder="0" />
+    </div>
+    <p v-if="!isValid" class="form-hint">Укажите склад, товар и целое количество больше нуля.</p>
+    <ErrorAlert :error="error" />
+    <div class="form-actions">
+      <button type="submit" class="btn btn--primary" :disabled="submitting || !isValid">
+        {{ submitting ? 'Выполняется…' : 'Зарезервировать' }}
+      </button>
+    </div>
+  </form>
+</template>
