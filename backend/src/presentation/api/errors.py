@@ -1,4 +1,5 @@
 """Unified error envelope and exception handlers."""
+
 from __future__ import annotations
 
 import logging
@@ -23,9 +24,7 @@ async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
     )
 
 
-async def validation_error_handler(
-    request: Request, exc: RequestValidationError
-) -> JSONResponse:
+async def validation_error_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     return JSONResponse(
         status_code=422,
         content=_error_body("validation_error", "request validation failed", exc.errors()),

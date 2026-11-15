@@ -1,4 +1,5 @@
 """Domain enums: statuses, operation types, movement types."""
+
 from __future__ import annotations
 
 from enum import StrEnum

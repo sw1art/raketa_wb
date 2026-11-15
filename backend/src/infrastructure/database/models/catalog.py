@@ -1,4 +1,5 @@
 """Catalog models: Store, Product, Warehouse, Stock."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -11,8 +12,8 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
-    Uuid,
     UniqueConstraint,
+    Uuid,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column
@@ -32,9 +33,7 @@ class Store(Base):
 
 class Product(Base):
     __tablename__ = "products"
-    __table_args__ = (
-        UniqueConstraint("store_id", "sku", name="uq_products_store_sku"),
-    )
+    __table_args__ = (UniqueConstraint("store_id", "sku", name="uq_products_store_sku"),)
 
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
     store_id: Mapped[UUID] = mapped_column(

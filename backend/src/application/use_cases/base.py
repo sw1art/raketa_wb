@@ -1,7 +1,8 @@
 """Use-case base class and shared helpers."""
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -12,7 +13,7 @@ from ..exceptions import NotFoundError, StockShortageError
 
 
 def now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class UseCase:

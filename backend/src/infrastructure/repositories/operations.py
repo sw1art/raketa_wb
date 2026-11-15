@@ -1,4 +1,5 @@
 """Operation (audit) and Outbox repositories."""
+
 from __future__ import annotations
 
 from uuid import UUID
@@ -8,8 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
 from domain.entities import HistoryEntry, Operation, OperationItem, StockMovement
-from domain.events import DomainEvent
 from domain.enums import OutboxStatus
+from domain.events import DomainEvent
 from infrastructure.database.models import Operation as OperationModel
 from infrastructure.database.models import OperationItem as OperationItemModel
 from infrastructure.database.models import OutboxEvent as OutboxEventModel
@@ -148,8 +149,7 @@ class OperationRepository:
         stmt = stmt.order_by(OperationModel.created_at.desc(), OperationModel.id)
         rows = await self._session.execute(stmt.offset(offset).limit(limit))
         entries = [
-            _history_entry(op, item, product, src, dst)
-            for op, item, product, src, dst in rows
+            _history_entry(op, item, product, src, dst) for op, item, product, src, dst in rows
         ]
         return entries, int(total or 0)
 
@@ -157,10 +157,7 @@ class OperationRepository:
         stmt = self._history_query().where(OperationModel.id == operation_id)
         stmt = stmt.order_by(OperationItemModel.id)
         rows = await self._session.execute(stmt)
-        return [
-            _history_entry(op, item, product, src, dst)
-            for op, item, product, src, dst in rows
-        ]
+        return [_history_entry(op, item, product, src, dst) for op, item, product, src, dst in rows]
 
 
 class OutboxRepository:

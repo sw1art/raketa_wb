@@ -1,4 +1,5 @@
 """Product catalog use cases."""
+
 from __future__ import annotations
 
 from uuid import UUID
@@ -70,9 +71,7 @@ class ListProductsUseCase(UseCase):
         name: str | None = None,
         query: ListQuery,
     ) -> tuple[list[Product], int]:
-        return await uow.products.list(
-            sku=sku, name=name, offset=query.offset, limit=query.limit
-        )
+        return await uow.products.list(sku=sku, name=name, offset=query.offset, limit=query.limit)
 
 
 class CreateStoreUseCase(UseCase):

@@ -1,9 +1,10 @@
 """Transactional Outbox publisher."""
+
 from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -17,7 +18,7 @@ logger = logging.getLogger("checkstock.outbox")
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class OutboxPublisher:
@@ -46,8 +47,7 @@ class OutboxPublisher:
                 select(OutboxEvent)
                 .where(
                     OutboxEvent.status == OutboxStatus.PENDING,
-                    (OutboxEvent.next_retry_at.is_(None))
-                    | (OutboxEvent.next_retry_at <= _now()),
+                    (OutboxEvent.next_retry_at.is_(None)) | (OutboxEvent.next_retry_at <= _now()),
                 )
                 .order_by(OutboxEvent.created_at, OutboxEvent.id)
                 .limit(self._batch_size)

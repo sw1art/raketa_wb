@@ -1,7 +1,8 @@
 """Warehouse (ФФ) use cases including archival."""
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
 
 from domain.entities import Warehouse
@@ -95,7 +96,7 @@ class ArchiveWarehouseUseCase(UseCase):
             )
 
         warehouse.is_active = False
-        warehouse.archived_at = datetime.now(timezone.utc)
+        warehouse.archived_at = datetime.now(UTC)
         archived = await uow.warehouses.update(warehouse)
 
         operation = make_operation(

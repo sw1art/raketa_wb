@@ -1,4 +1,5 @@
 """Reservation, Transfer, Shipment models."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -34,7 +35,11 @@ class Reservation(Base):
     )
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     status: Mapped[ReservationStatus] = mapped_column(
-        Enum(ReservationStatus, name="reservation_status", values_callable=lambda e: [m.value for m in e]),
+        Enum(
+            ReservationStatus,
+            name="reservation_status",
+            values_callable=lambda e: [m.value for m in e],
+        ),
         nullable=False,
         default=ReservationStatus.ACTIVE,
     )
@@ -57,7 +62,9 @@ class Transfer(Base):
         Uuid, ForeignKey("warehouses.id", ondelete="RESTRICT"), nullable=False, index=True
     )
     status: Mapped[TransferStatus] = mapped_column(
-        Enum(TransferStatus, name="transfer_status", values_callable=lambda e: [m.value for m in e]),
+        Enum(
+            TransferStatus, name="transfer_status", values_callable=lambda e: [m.value for m in e]
+        ),
         nullable=False,
         default=TransferStatus.DRAFT,
     )
@@ -91,7 +98,9 @@ class Shipment(Base):
         nullable=False,
     )
     status: Mapped[ShipmentStatus] = mapped_column(
-        Enum(ShipmentStatus, name="shipment_status", values_callable=lambda e: [m.value for m in e]),
+        Enum(
+            ShipmentStatus, name="shipment_status", values_callable=lambda e: [m.value for m in e]
+        ),
         nullable=False,
         default=ShipmentStatus.DRAFT,
     )

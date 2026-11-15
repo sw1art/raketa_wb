@@ -12,6 +12,16 @@ const { data: overview, pending, error, refresh } = await useAsyncData<StocksOve
 
 const warehouses = computed(() => overview.value?.warehouses ?? [])
 
+const totals = computed(() => {
+  const rows = overview.value?.products ?? []
+  return {
+    physical: rows.reduce((sum, p) => sum + p.total_physical, 0),
+    reserved: rows.reduce((sum, p) => sum + p.total_reserved, 0),
+    available: rows.reduce((sum, p) => sum + p.total_available, 0),
+    inTransit: rows.reduce((sum, p) => sum + p.in_transit_total, 0),
+  }
+})
+
 const filteredProducts = computed<StockRow[]>(() => {
   const rows = overview.value?.products ?? []
   const q = search.value.trim().toLowerCase()
@@ -37,11 +47,32 @@ const filteredProducts = computed<StockRow[]>(() => {
 
     <ErrorAlert :error="error" />
     <LoadingState v-if="pending" />
-    <EmptyState
-      v-else-if="!filteredProducts.length"
-      title="Товары не найдены"
-      text="Измените поисковый запрос или добавьте товар."
-    />
-    <StocksTable v-else :warehouses="warehouses" :products="filteredProducts" />
+    <template v-else>
+      <div class="summary-grid">
+        <div class="summary-card">
+          <span class="summary-card__value">{{ totals.physical }}</span>
+          <span class="summary-card__label">Физический остаток</span>
+        </div>
+        <div class="summary-card summary-card--reserved">
+          <span class="summary-card__value">{{ totals.reserved }}</span>
+          <span class="summary-card__label">В резерве FBS</span>
+        </div>
+        <div class="summary-card summary-card--available">
+          <span class="summary-card__value">{{ totals.available }}</span>
+          <span class="summary-card__label">Доступно</span>
+        </div>
+        <div class="summary-card summary-card--transit">
+          <span class="summary-card__value">{{ totals.inTransit }}</span>
+          <span class="summary-card__label">В пути</span>
+        </div>
+      </div>
+
+      <EmptyState
+        v-if="!filteredProducts.length"
+        title="Товары не найдены"
+        text="Измените поисковый запрос или добавьте товар."
+      />
+      <StocksTable v-else :warehouses="warehouses" :products="filteredProducts" />
+    </template>
   </div>
 </template>

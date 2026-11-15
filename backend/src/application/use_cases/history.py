@@ -1,4 +1,5 @@
 """Operations history use cases."""
+
 from __future__ import annotations
 
 from uuid import UUID

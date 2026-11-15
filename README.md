@@ -178,13 +178,72 @@ pytest
 
 ---
 
-## 8. Примеры API
+## 8. Справочник API
 
 Базовый префикс `/api/v1`. Единый формат ошибок:
 
 ```json
 {"error": {"code": "stock_shortage", "message": "...", "detail": {...}}}
 ```
+
+### Товары — `Products`
+| Метод | URL | Описание |
+|---|---|---|
+| GET | `/products` | Список товаров (фильтры `sku`, `name`, пагинация `offset`/`limit`) |
+| GET | `/products/{id}` | Информация о товаре |
+| POST | `/products` | Создать товар (SKU уникален в рамках магазина) |
+| PATCH | `/products/{id}` | Изменить товар (название, SKU, внешний ID WB) |
+
+### Склады — `Warehouses`
+| Метод | URL | Описание |
+|---|---|---|
+| GET | `/warehouses` | Список складов (`active_only=true` — только активные) |
+| GET | `/warehouses/{id}` | Информация о складе |
+| POST | `/warehouses` | Создать склад |
+| PATCH | `/warehouses/{id}` | Переименовать склад |
+| DELETE | `/warehouses/{id}` | **Логически архивировать** (409, если есть остатки/открытые операции) |
+
+### Остатки — `Stocks`
+| Метод | URL | Описание |
+|---|---|---|
+| GET | `/stocks` | Экран остатков: physical/reserved/available по складам, итоги, товар в пути |
+| GET | `/stocks/in-transit` | Товары в пути (перемещение / FBO / FBS) |
+| GET | `/stocks/{sku}` | Остатки конкретного артикула |
+
+### Операции — `Operations` (критические — с заголовком `Idempotency-Key`)
+| Метод | URL | Описание |
+|---|---|---|
+| POST | `/operations/receipts` | Приход товара (увеличивает `physical`) |
+| POST | `/operations/reservations` | Резерв FBS (увеличивает `reserved`) |
+| POST | `/operations/reservations/{id}/cancel` | Отмена резерва FBS |
+| POST | `/operations/transfers` | Создать перемещение (DRAFT) |
+| POST | `/operations/transfers/{id}/dispatch` | Отправить перемещение (списание с источника, в пути) |
+| POST | `/operations/transfers/{id}/receive` | Принять перемещение (приход на цель) |
+| POST | `/operations/shipments/fbs` | Отправить FBS из активного резерва |
+| POST | `/operations/shipments/fbo` | Создать отправку FBO (DRAFT) |
+| POST | `/operations/shipments/{id}/dispatch` | Отправить FBO (списание с ФФ, в пути) |
+| POST | `/operations/shipments/{id}/receive` | Принять FBO на WB |
+
+### Отправки и справочники
+| Метод | URL | Описание |
+|---|---|---|
+| GET | `/shipments` | Список отправок (фильтры `type`, `status`) |
+| GET | `/reservations` | Список резервов (фильтр `status`) |
+| GET | `/transfers` | Список перемещений (фильтр `status`) |
+
+### История — `History`
+| Метод | URL | Описание |
+|---|---|---|
+| GET | `/history` | История операций (фильтры `operation_type`, `sku`) |
+| GET | `/history/{id}` | Детали одной операции |
+
+### Wildberries — `Integrations`
+| Метод | URL | Описание |
+|---|---|---|
+| GET | `/integrations/wb/status` | Статус интеграции (токен/демо-режим/последняя синхронизация) |
+| POST | `/integrations/wb/sync` | Запустить синхронизацию с WB |
+
+### Примеры
 
 ```bash
 # Остатки
@@ -213,7 +272,7 @@ curl -X POST http://localhost:8000/api/v1/operations/shipments/fbo \
   -d '{"source_warehouse_id":"<uuid>","items":[{"product_id":"<uuid>","quantity":4}]}'
 ```
 
-Полный контракт — в Swagger: http://localhost:8000/docs.
+Полный интерактивный контракт с описаниями — в Swagger: http://localhost:8000/docs.
 
 ---
 
@@ -254,6 +313,15 @@ curl -X POST http://localhost:8000/api/v1/operations/shipments/fbo \
 (env); есть таймауты, rate limiting, retry с exponential backoff, журнал `wb_sync_logs`. Без токена
 приложение работает в **демо-режиме** и ничего не «придумывает»: внутренний учёт остаётся источником
 истины, внешние данные WB не перезаписывают физические остатки.
+
+### Валидация, ошибки и безопасность
+- **Валидация**: Pydantic-схемы с ограничениями (`quantity > 0`, длины строк, диапазоны `limit`).
+- **Ошибки**: единый конверт `{"error": {code, message, detail}}`; бизнес-ошибки — понятные коды
+  (`stock_shortage` с `shortfall` и списком других ФФ, `warehouse_archive_error` с причинами).
+- **Безопасность**: CORS ограничен списком источников (`CORS_ORIGINS`), добавлены security-заголовки
+  (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`); секреты — только из env и никогда
+  не логируются; SQL — только через параметризованные запросы SQLAlchemy; ORM-объекты не возвращаются
+  в API (только Pydantic/DTO).
 
 ---
 

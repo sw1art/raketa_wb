@@ -43,6 +43,7 @@ services:
       RABBITMQ_EXCHANGE: checkstock.events
       RABBITMQ_QUEUE: checkstock.events.queue
       RABBITMQ_DLQ: checkstock.events.dlq
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
       WB_API_TOKEN: ${WB_API_TOKEN:-}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     ports:

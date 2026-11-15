@@ -1,4 +1,5 @@
 """Listing use cases: shipments, reservations, transfers."""
+
 from __future__ import annotations
 
 from domain.entities import ReservationView, Shipment, TransferView
@@ -27,14 +28,10 @@ class ListShipmentsUseCase(UseCase):
 
 
 class ListReservationsUseCase(UseCase):
-    async def _run(
-        self, uow: UnitOfWork, *, status: str | None = None
-    ) -> list[ReservationView]:
+    async def _run(self, uow: UnitOfWork, *, status: str | None = None) -> list[ReservationView]:
         return await uow.reservations.list_joined(status=status)
 
 
 class ListTransfersUseCase(UseCase):
-    async def _run(
-        self, uow: UnitOfWork, *, status: str | None = None
-    ) -> list[TransferView]:
+    async def _run(self, uow: UnitOfWork, *, status: str | None = None) -> list[TransferView]:
         return await uow.transfers.list_joined(status=status)

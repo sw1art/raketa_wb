@@ -1,4 +1,5 @@
 """Operation (audit/history), movement and ledger models."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -38,9 +39,7 @@ class Operation(Base):
     )
     entity_type: Mapped[str | None] = mapped_column(String(64), nullable=True)
     entity_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)
-    idempotency_key: Mapped[str | None] = mapped_column(
-        String(128), nullable=True, unique=True
-    )
+    idempotency_key: Mapped[str | None] = mapped_column(String(128), nullable=True, unique=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
     )

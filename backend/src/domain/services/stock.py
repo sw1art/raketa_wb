@@ -2,6 +2,7 @@
 
 All functions are side-effect free and unit-testable without a database.
 """
+
 from __future__ import annotations
 
 from ..value_objects import Shortage

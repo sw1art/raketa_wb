@@ -1,7 +1,8 @@
 """Wildberries integration use cases."""
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from domain.enums import WbSyncStatus
 
@@ -18,7 +19,7 @@ class SyncWildberriesUseCase:
         self._sync_logs = sync_logs
 
     async def execute(self) -> dict:
-        started = datetime.now(timezone.utc)
+        started = datetime.now(UTC)
         if not self._client.is_configured():
             await self._sync_logs.add(
                 WbSyncLog(
@@ -53,7 +54,7 @@ class SyncWildberriesUseCase:
                 items_processed=items,
                 error=error,
                 started_at=started,
-                finished_at=datetime.now(timezone.utc),
+                finished_at=datetime.now(UTC),
             )
         )
         return {

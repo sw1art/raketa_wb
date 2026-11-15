@@ -1,4 +1,5 @@
 """Import all ORM models so Alembic autogenerate and metadata see them."""
+
 from .base import Base
 from .catalog import Product, Stock, Store, Warehouse
 from .events import OutboxEvent, ProcessedEvent
@@ -14,19 +15,19 @@ from .warehouse_ops import (
 
 __all__ = [
     "Base",
-    "Product",
-    "Stock",
-    "Store",
-    "Warehouse",
-    "OutboxEvent",
-    "ProcessedEvent",
-    "WbSyncLog",
     "Operation",
     "OperationItem",
-    "StockMovement",
+    "OutboxEvent",
+    "ProcessedEvent",
+    "Product",
     "Reservation",
     "Shipment",
     "ShipmentItem",
+    "Stock",
+    "StockMovement",
+    "Store",
     "Transfer",
     "TransferItem",
+    "Warehouse",
+    "WbSyncLog",
 ]

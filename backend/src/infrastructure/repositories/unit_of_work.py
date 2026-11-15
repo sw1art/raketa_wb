@@ -1,4 +1,5 @@
 """SQLAlchemy UnitOfWork implementing the domain UnitOfWork port."""
+
 from __future__ import annotations
 
 from sqlalchemy.exc import IntegrityError

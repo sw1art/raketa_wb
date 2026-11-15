@@ -3,6 +3,7 @@
 The domain depends only on these abstractions; concrete implementations use
 SQLAlchemy / PostgreSQL in the infrastructure layer.
 """
+
 from __future__ import annotations
 
 from typing import Protocol

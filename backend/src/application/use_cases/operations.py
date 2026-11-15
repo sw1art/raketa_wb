@@ -1,4 +1,5 @@
 """Stock operation use cases — receipt, reservations, FBS, transfers, FBO."""
+
 from __future__ import annotations
 
 from domain import services as svc
@@ -197,13 +198,9 @@ class CancelFBSReservationUseCase(UseCase):
             raise NotFoundError(f"reservation {cmd.reservation_id} not found")
         if reservation.status is ReservationStatus.CANCELLED:
             return reservation
-        assert_transition(
-            reservation.status, ReservationStatus.CANCELLED, RESERVATION_TRANSITIONS
-        )
+        assert_transition(reservation.status, ReservationStatus.CANCELLED, RESERVATION_TRANSITIONS)
 
-        stock = await uow.stocks.get_for_update(
-            reservation.product_id, reservation.warehouse_id
-        )
+        stock = await uow.stocks.get_for_update(reservation.product_id, reservation.warehouse_id)
         if stock is None:
             raise ConflictError("reservation has no corresponding stock row")
         new_physical, new_reserved = svc.release(
@@ -223,7 +220,13 @@ class CancelFBSReservationUseCase(UseCase):
             entity_type="reservation",
             entity_id=reservation.id,
         )
-        items = [make_item(reservation.product_id, reservation.quantity, source_warehouse_id=reservation.warehouse_id)]
+        items = [
+            make_item(
+                reservation.product_id,
+                reservation.quantity,
+                source_warehouse_id=reservation.warehouse_id,
+            )
+        ]
         await uow.operations.create(operation, items, [])
         await uow.outbox.add(
             make_event(
@@ -260,9 +263,7 @@ class ShipFBSOrderUseCase(UseCase):
             raise ConflictError("reservation already shipped but shipment not found")
         assert_transition(reservation.status, ReservationStatus.SHIPPED, RESERVATION_TRANSITIONS)
 
-        stock = await uow.stocks.get_for_update(
-            reservation.product_id, reservation.warehouse_id
-        )
+        stock = await uow.stocks.get_for_update(reservation.product_id, reservation.warehouse_id)
         if stock is None or stock.reserved < reservation.quantity:
             raise ConflictError("reservation quantity exceeds reserved stock")
         stock.physical, stock.reserved = svc.deduct(
@@ -295,7 +296,13 @@ class ShipFBSOrderUseCase(UseCase):
             entity_id=shipment.id,
             idempotency_key=cmd.idempotency_key,
         )
-        items = [make_item(reservation.product_id, reservation.quantity, source_warehouse_id=reservation.warehouse_id)]
+        items = [
+            make_item(
+                reservation.product_id,
+                reservation.quantity,
+                source_warehouse_id=reservation.warehouse_id,
+            )
+        ]
         movements = [
             make_movement(
                 reservation.product_id,
@@ -403,15 +410,16 @@ class DispatchTransferUseCase(UseCase):
         transfer = await uow.transfers.get_for_update(cmd.transfer_id)
         if transfer is None:
             raise NotFoundError(f"transfer {cmd.transfer_id} not found")
-        if transfer.status is TransferStatus.IN_TRANSIT or transfer.status is TransferStatus.RECEIVED:
+        if (
+            transfer.status is TransferStatus.IN_TRANSIT
+            or transfer.status is TransferStatus.RECEIVED
+        ):
             return transfer
         assert_transition(transfer.status, TransferStatus.IN_TRANSIT, TRANSFER_TRANSITIONS)
 
         for item in transfer.items:
             product = await get_product(uow, item.product_id)
-            stock = await uow.stocks.get_for_update(
-                item.product_id, transfer.source_warehouse_id
-            )
+            stock = await uow.stocks.get_for_update(item.product_id, transfer.source_warehouse_id)
             physical = stock.physical if stock else 0
             reserved = stock.reserved if stock else 0
             if not svc.can_deduct(physical, reserved, item.quantity):
@@ -611,9 +619,7 @@ class DispatchFBOShipmentUseCase(UseCase):
 
         for item in shipment.items:
             product = await get_product(uow, item.product_id)
-            stock = await uow.stocks.get_for_update(
-                item.product_id, shipment.source_warehouse_id
-            )
+            stock = await uow.stocks.get_for_update(item.product_id, shipment.source_warehouse_id)
             physical = stock.physical if stock else 0
             if not svc.can_deduct(physical, 0, item.quantity):
                 await raise_shortage(
@@ -635,7 +641,9 @@ class DispatchFBOShipmentUseCase(UseCase):
             entity_id=shipment.id,
         )
         op_items = [
-            make_item(item.product_id, item.quantity, source_warehouse_id=shipment.source_warehouse_id)
+            make_item(
+                item.product_id, item.quantity, source_warehouse_id=shipment.source_warehouse_id
+            )
             for item in shipment.items
         ]
         movements = [
@@ -682,7 +690,9 @@ class ReceiveFBOShipmentUseCase(UseCase):
             entity_id=shipment.id,
         )
         op_items = [
-            make_item(item.product_id, item.quantity, source_warehouse_id=shipment.source_warehouse_id)
+            make_item(
+                item.product_id, item.quantity, source_warehouse_id=shipment.source_warehouse_id
+            )
             for item in shipment.items
         ]
         await uow.operations.create(operation, op_items, [])

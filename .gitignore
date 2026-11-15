@@ -12,7 +12,10 @@ build/
 
 # Env / secrets
 .env
-.env.local
+.env.*
+!.env.example
+*.pem
+*.key
 
 # Node / frontend
 node_modules/
@@ -21,6 +24,8 @@ node_modules/
 .frontend/
 dist/
 .nitro/
+*.tsbuildinfo
+.cache/
 
 # IDE / OS
 .idea/
@@ -28,7 +33,15 @@ dist/
 .DS_Store
 Thumbs.db
 
-# Local tooling (not part of the project)
+# Local tooling / scratch (not part of the project)
 .tools/
 _pdf_text.txt
 *.log
+.pg/
+.data/
+
+
+# DLS
+redirect (2).pdf
+redirect (3).pdf
+

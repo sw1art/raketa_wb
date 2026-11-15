@@ -1,4 +1,5 @@
 """Warehouse archival policy — business rules for logical deletion."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -28,9 +29,7 @@ def check_archive(
 ) -> ArchiveCheck:
     reasons: list[str] = []
     if nonzero_stocks:
-        reasons.append(
-            f"warehouse has {len(nonzero_stocks)} SKU(s) with non-zero physical stock"
-        )
+        reasons.append(f"warehouse has {len(nonzero_stocks)} SKU(s) with non-zero physical stock")
     if open_transfers:
         reasons.append(f"{open_transfers} unfinished transfer(s) reference this warehouse")
     if open_shipments:

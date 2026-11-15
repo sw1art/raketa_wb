@@ -1,7 +1,7 @@
 """Processed-events store (idempotency guard) implementation."""
+
 from __future__ import annotations
 
-from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 

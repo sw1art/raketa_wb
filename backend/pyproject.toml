@@ -48,3 +48,10 @@ filterwarnings = ["ignore::DeprecationWarning"]
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "RUF", "BLE"]
+# B008: FastAPI's `Depends(...)` in argument defaults is the documented idiom.
+# BLE001: reconnect/retry loops intentionally catch broadly and always log.
+# RUF001/RUF002: legitimate Russian (Cyrillic) text in docstrings/strings.
+ignore = ["B008", "BLE001", "RUF001", "RUF002"]

@@ -1,7 +1,8 @@
 """Application commands and queries (plain dataclasses)."""
+
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from uuid import UUID
 
 

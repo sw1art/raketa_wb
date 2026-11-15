@@ -1,4 +1,5 @@
 """Outbox and processed-events models."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -25,9 +26,7 @@ from .base import Base
 
 class OutboxEvent(Base):
     __tablename__ = "outbox_events"
-    __table_args__ = (
-        Index("ix_outbox_events_pending", "status", "next_retry_at", "created_at"),
-    )
+    __table_args__ = (Index("ix_outbox_events_pending", "status", "next_retry_at", "created_at"),)
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     event_id: Mapped[UUID] = mapped_column(Uuid, unique=True, nullable=False, default=uuid4)

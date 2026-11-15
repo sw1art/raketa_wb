@@ -1,4 +1,5 @@
 """Catalog repositories: Store, Product, Warehouse, Stock."""
+
 from __future__ import annotations
 
 from uuid import UUID
@@ -69,9 +70,7 @@ class ProductRepository:
 
     async def get_by_sku(self, store_id: UUID, sku: str) -> Product | None:
         model = await self._session.scalar(
-            select(ProductModel).where(
-                ProductModel.store_id == store_id, ProductModel.sku == sku
-            )
+            select(ProductModel).where(ProductModel.store_id == store_id, ProductModel.sku == sku)
         )
         return _product_to_domain(model) if model else None
 
@@ -188,9 +187,7 @@ class StockRepository:
         await self._session.execute(
             pg_insert(StockModel)
             .values(product_id=product_id, warehouse_id=warehouse_id, physical=0, reserved=0)
-            .on_conflict_do_nothing(
-                index_elements=[StockModel.product_id, StockModel.warehouse_id]
-            )
+            .on_conflict_do_nothing(index_elements=[StockModel.product_id, StockModel.warehouse_id])
         )
         stock = await self.get_for_update(product_id, warehouse_id)
         assert stock is not None
@@ -221,10 +218,7 @@ class StockRepository:
             )
             .order_by(ProductModel.sku)
         )
-        return [
-            (_stock_to_domain(stock), _product_to_domain(product))
-            for stock, product in rows
-        ]
+        return [(_stock_to_domain(stock), _product_to_domain(product)) for stock, product in rows]
 
     async def available_by_product(
         self, product_id: UUID, exclude_warehouse_id: UUID | None

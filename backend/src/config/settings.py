@@ -1,4 +1,5 @@
 """Application settings loaded from environment variables / .env file."""
+
 from __future__ import annotations
 
 from functools import lru_cache
@@ -17,10 +18,10 @@ class Settings(BaseSettings):
     app_name: str = "CheckStock"
     api_prefix: str = "/api/v1"
     log_level: str = "INFO"
+    # Разрешённые CORS-источники через запятую (например "http://localhost:3000,http://127.0.0.1:3000").
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
 
-    database_url: str = (
-        "postgresql+asyncpg://checkstock:checkstock@localhost:5432/checkstock"
-    )
+    database_url: str = "postgresql+asyncpg://checkstock:checkstock@localhost:5432/checkstock"
 
     rabbitmq_url: str = "amqp://checkstock:checkstock@localhost:5672/"
     rabbitmq_exchange: str = "checkstock.events"

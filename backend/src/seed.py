@@ -1,4 +1,5 @@
 """Idempotent seed script — initial store, warehouses, products and stock."""
+
 from __future__ import annotations
 
 import asyncio
@@ -34,9 +35,7 @@ async def seed() -> None:
 
         for name in WAREHOUSES:
             if await uow.warehouses.get_by_name(name) is None:
-                await uow.warehouses.create(
-                    Warehouse(id=uuid4(), name=name, is_active=True)
-                )
+                await uow.warehouses.create(Warehouse(id=uuid4(), name=name, is_active=True))
 
         for sku, name in PRODUCTS:
             if await uow.products.get_by_sku(store.id, sku) is None:
@@ -48,7 +47,7 @@ async def seed() -> None:
 
         warehouses = await uow.warehouses.list(active_only=False)
         wh_by_name = {w.name: w.id for w in warehouses}
-        for sku, name in PRODUCTS:
+        for sku, _name in PRODUCTS:
             product = await uow.products.get_by_sku(store.id, sku)
             assert product is not None
             for wh_name, qty in INITIAL_STOCK[sku].items():
@@ -60,8 +59,10 @@ async def seed() -> None:
                     stock.reserved = 0
                     await uow.stocks.save(stock)
         await session.commit()
-        print(f"seed complete: store='{store.name}', "
-              f"{len(WAREHOUSES)} warehouses, {len(PRODUCTS)} products")
+        print(
+            f"seed complete: store='{store.name}', "
+            f"{len(WAREHOUSES)} warehouses, {len(PRODUCTS)} products"
+        )
 
 
 def main() -> None:

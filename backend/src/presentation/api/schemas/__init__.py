@@ -1,13 +1,11 @@
 """Request and response schemas (Pydantic v2)."""
+
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Generic, TypeVar
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
-
-T = TypeVar("T")
 
 
 class ProductOut(BaseModel):

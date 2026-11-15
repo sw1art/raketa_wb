@@ -1,4 +1,5 @@
 """Reservation, Transfer and Shipment repositories."""
+
 from __future__ import annotations
 
 from uuid import UUID
@@ -54,9 +55,7 @@ class ReservationRepository:
 
     async def get_for_update(self, reservation_id: UUID) -> Reservation | None:
         model = await self._session.scalar(
-            select(ReservationModel)
-            .where(ReservationModel.id == reservation_id)
-            .with_for_update()
+            select(ReservationModel).where(ReservationModel.id == reservation_id).with_for_update()
         )
         return _reservation_to_domain(model) if model else None
 
@@ -401,9 +400,7 @@ class ShipmentRepository:
         items_by_shipment: dict[UUID, list[ShipmentItemModel]] = {}
         for item in items:
             items_by_shipment.setdefault(item.shipment_id, []).append(item)
-        return [
-            _shipment_to_domain(s, items_by_shipment.get(s.id, [])) for s in shipment_list
-        ]
+        return [_shipment_to_domain(s, items_by_shipment.get(s.id, [])) for s in shipment_list]
 
     async def list(
         self,

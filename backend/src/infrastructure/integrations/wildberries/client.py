@@ -1,4 +1,5 @@
 """Wildberries integration adapter (httpx, async)."""
+
 from __future__ import annotations
 
 import asyncio
@@ -67,7 +68,7 @@ class WildberriesClient:
                 except (httpx.HTTPError, WildberriesRateLimitError) as exc:
                     last_error = exc
                     if attempt < self._max_retries - 1:
-                        await asyncio.sleep(2 ** attempt)
+                        await asyncio.sleep(2**attempt)
             assert last_error is not None
             raise WildberriesError(f"WB request failed: {last_error}")
 
@@ -80,27 +81,21 @@ class WildberriesClient:
     async def sync_cards(self) -> list[dict]:
         """Fetch the product cards list (content API)."""
         body = {"settings": {"cursor": {"limit": 100}, "filter": {"withPhoto": -1}}}
-        data = await self._request(
-            "POST", self._content_url, _CARDS_PATH, json_body=body
-        )
+        data = await self._request("POST", self._content_url, _CARDS_PATH, json_body=body)
         cards = data.get("cards", [])
         logger.info("synced %d WB cards", len(cards))
         return cards
 
     async def sync_fbs_orders(self) -> list[dict]:
         """Fetch new FBS orders (marketplace API)."""
-        data = await self._request(
-            "GET", self._marketplace_url, _FBS_ORDERS_PATH
-        )
+        data = await self._request("GET", self._marketplace_url, _FBS_ORDERS_PATH)
         orders = data.get("orders", [])
         logger.info("synced %d WB FBS orders", len(orders))
         return orders
 
     async def sync_fbo_supplies(self) -> list[dict]:
         """Fetch the list of FBO supplies (marketplace API)."""
-        data = await self._request(
-            "GET", self._marketplace_url, _FBO_SUPPLIES_PATH
-        )
+        data = await self._request("GET", self._marketplace_url, _FBO_SUPPLIES_PATH)
         supplies = data.get("supplies", [])
         logger.info("synced %d WB FBO supplies", len(supplies))
         return supplies

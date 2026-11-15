@@ -1,4 +1,5 @@
 """Background worker: outbox publisher + event-journal consumer."""
+
 from __future__ import annotations
 
 import asyncio
@@ -32,9 +33,7 @@ async def _run_consumer(consumer: RabbitMQConsumer) -> None:
 async def run() -> None:
     settings = get_settings()
 
-    rabbit_publisher = RabbitMQPublisher(
-        settings.rabbitmq_url, settings.rabbitmq_exchange
-    )
+    rabbit_publisher = RabbitMQPublisher(settings.rabbitmq_url, settings.rabbitmq_exchange)
     outbox = OutboxPublisher(SessionFactory, rabbit_publisher, settings)
 
     event_store = ProcessedEventStore(SessionFactory)

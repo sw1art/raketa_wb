@@ -1,5 +1,7 @@
-"""Warehouse routes."""
-from __future__ import annotations
+"""Эндпоинты управления складами фулфилмента (ФФ).
+
+Удаление склада — логическое (архивирование): история и остатки сохраняются.
+"""
 
 from uuid import UUID
 
@@ -28,43 +30,78 @@ from presentation.api.schemas import (
 router = APIRouter(prefix="/warehouses", tags=["warehouses"])
 
 
-@router.get("", response_model=list[WarehouseOut])
+@router.get(
+    "",
+    response_model=list[WarehouseOut],
+    summary="Список складов",
+    response_description="Список всех складов (или только активных).",
+)
 async def list_warehouses(
-    active_only: bool = Query(default=False),
+    active_only: bool = Query(
+        default=False, description="Только активные (не архивированные) склады"
+    ),
     uow: UnitOfWork = Depends(get_uow),
-):
+) -> list[WarehouseOut]:
+    """Возвращает склады; `active_only=true` скрывает архивированные."""
     warehouses = await ListWarehousesUseCase().execute(uow, active_only=active_only)
     return [WarehouseOut.model_validate(w) for w in warehouses]
 
 
-@router.get("/{warehouse_id}", response_model=WarehouseOut)
-async def get_warehouse(warehouse_id: UUID, uow: UnitOfWork = Depends(get_uow)):
+@router.get(
+    "/{warehouse_id}",
+    response_model=WarehouseOut,
+    summary="Информация о складе",
+    response_description="Данные одного склада.",
+)
+async def get_warehouse(warehouse_id: UUID, uow: UnitOfWork = Depends(get_uow)) -> WarehouseOut:
+    """Возвращает склад по идентификатору; 404, если не найден."""
     warehouse = await GetWarehouseUseCase().execute(uow, warehouse_id)
     return WarehouseOut.model_validate(warehouse)
 
 
-@router.post("", response_model=WarehouseOut, status_code=201)
+@router.post(
+    "",
+    response_model=WarehouseOut,
+    status_code=201,
+    summary="Создать склад",
+    response_description="Созданный склад.",
+)
 async def create_warehouse(
     body: CreateWarehouseRequest, uow: UnitOfWork = Depends(get_uow)
-):
-    warehouse = await CreateWarehouseUseCase().execute(
-        uow, CreateWarehouseCommand(name=body.name)
-    )
+) -> WarehouseOut:
+    """Создаёт новый склад фулфилмента. Имя уникально (409 при дубликате)."""
+    warehouse = await CreateWarehouseUseCase().execute(uow, CreateWarehouseCommand(name=body.name))
     return WarehouseOut.model_validate(warehouse)
 
 
-@router.patch("/{warehouse_id}", response_model=WarehouseOut)
+@router.patch(
+    "/{warehouse_id}",
+    response_model=WarehouseOut,
+    summary="Переименовать склад",
+    response_description="Склад с обновлённым названием.",
+)
 async def rename_warehouse(
     warehouse_id: UUID, body: RenameWarehouseRequest, uow: UnitOfWork = Depends(get_uow)
-):
+) -> WarehouseOut:
+    """Меняет название склада (логически)."""
     warehouse = await RenameWarehouseUseCase().execute(
         uow, RenameWarehouseCommand(warehouse_id=warehouse_id, name=body.name)
     )
     return WarehouseOut.model_validate(warehouse)
 
 
-@router.delete("/{warehouse_id}", response_model=WarehouseOut)
-async def archive_warehouse(warehouse_id: UUID, uow: UnitOfWork = Depends(get_uow)):
+@router.delete(
+    "/{warehouse_id}",
+    response_model=WarehouseOut,
+    summary="Архивировать склад",
+    response_description="Архивированный склад (is_active=false).",
+)
+async def archive_warehouse(warehouse_id: UUID, uow: UnitOfWork = Depends(get_uow)) -> WarehouseOut:
+    """Логически архивирует склад.
+
+    Возвращает 409, если у склада есть ненулевые физические остатки, незавершённые
+    перемещения/отправки или активные резервы — с перечнем причин и товаров в `detail`.
+    """
     warehouse = await ArchiveWarehouseUseCase().execute(
         uow, ArchiveWarehouseCommand(warehouse_id=warehouse_id)
     )

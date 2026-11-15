@@ -1,4 +1,5 @@
 """Domain value objects."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -16,10 +17,10 @@ class Quantity:
         if self.value < 0:
             raise ValueError("quantity must be non-negative")
 
-    def __add__(self, other: "Quantity") -> "Quantity":
+    def __add__(self, other: Quantity) -> Quantity:
         return Quantity(self.value + other.value)
 
-    def __sub__(self, other: "Quantity") -> "Quantity":
+    def __sub__(self, other: Quantity) -> Quantity:
         result = self.value - other.value
         if result < 0:
             raise ValueError("quantity cannot become negative")

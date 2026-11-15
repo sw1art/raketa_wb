@@ -1,7 +1,8 @@
 """State-machine transition rules."""
+
 from __future__ import annotations
 
-from typing import Mapping, TypeAlias
+from collections.abc import Mapping
 
 from ..enums import (
     ReservationStatus,
@@ -10,7 +11,7 @@ from ..enums import (
     TransferStatus,
 )
 
-Transitions: TypeAlias = Mapping[object, set[object]]
+type Transitions = Mapping[object, set[object]]
 
 RESERVATION_TRANSITIONS: dict[ReservationStatus, set[ReservationStatus]] = {
     ReservationStatus.ACTIVE: {ReservationStatus.CANCELLED, ReservationStatus.SHIPPED},

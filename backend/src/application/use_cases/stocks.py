@@ -1,4 +1,5 @@
 """Stock overview / in-transit query use cases."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -74,13 +75,9 @@ class GetStocksOverviewUseCase(UseCase):
         products, _ = await uow.products.list(sku=sku, name=name, offset=0, limit=10_000)
         warehouses = await uow.warehouses.list(active_only=True)
         joined = await uow.stocks.list_joined(sku=sku, name=name, warehouse_id=None)
-        stock_map = {
-            (stock.product_id, stock.warehouse_id): stock for stock, _p, _w in joined
-        }
+        stock_map = {(stock.product_id, stock.warehouse_id): stock for stock, _p, _w in joined}
         in_transit = await _in_transit_breakdown(uow)
-        rows = [
-            _stock_row(product, warehouses, stock_map, in_transit) for product in products
-        ]
+        rows = [_stock_row(product, warehouses, stock_map, in_transit) for product in products]
         return {"warehouses": warehouses, "products": rows}
 
 
@@ -91,13 +88,9 @@ class GetStockBySkuUseCase(UseCase):
             raise NotFoundError(f"no product with SKU '{sku}'")
         warehouses = await uow.warehouses.list(active_only=True)
         joined = await uow.stocks.list_joined(sku=sku, name=None, warehouse_id=None)
-        stock_map = {
-            (stock.product_id, stock.warehouse_id): stock for stock, _p, _w in joined
-        }
+        stock_map = {(stock.product_id, stock.warehouse_id): stock for stock, _p, _w in joined}
         in_transit = await _in_transit_breakdown(uow)
-        rows = [
-            _stock_row(product, warehouses, stock_map, in_transit) for product in products
-        ]
+        rows = [_stock_row(product, warehouses, stock_map, in_transit) for product in products]
         return {"warehouses": warehouses, "products": rows}
 
 
