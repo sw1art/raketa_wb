@@ -42,6 +42,5 @@ _pdf_text.txt
 
 
 # DLS
-redirect (2).pdf
-redirect (3).pdf
+redirect*.pdf
 
