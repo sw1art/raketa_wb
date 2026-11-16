@@ -11,6 +11,57 @@ CheckStock отвечает на вопрос **«где сейчас товар
 двойное списание, рассинхрон «остаток изменился, но операция не записана».
 
 ---
+## 0. Быстрый запуск стенда
+
+Docker (рекомендуемый):
+
+### Требования
+- Docker и Docker Compose (проверено на Docker Engine 29+).
+
+### Шаги
+
+```bash
+# 1. Клонировать репозиторий
+git clone <repo-url> checkstock && cd checkstock
+
+# 2. Настроить окружение (необязательно — есть дефолты)
+cp .env.example .env
+#   WB_API_TOKEN оставьте пустым для локального демо-режима
+
+# 3. Собрать и запустить
+docker compose up --build -d
+
+# 4. Проверить статус
+docker compose ps
+```
+
+После запуска:
+- **Frontend**: http://localhost:3000
+- **Backend API / Swagger**: http://localhost:8000/docs
+- **RabbitMQ Management**: http://localhost:15672 (логин/пароль `checkstock`/`checkstock` по умолчанию)
+
+При старте `backend` автоматически применяет миграции Alembic и идемпотентно заполняет тестовые
+данные (магазин «Ракета», ФФ «Север» и «Юг», товары SKU-101/102/103 и начальные остатки).
+
+### Остановка
+
+```bash
+docker compose down            # сохраняет данные (volumes)
+docker compose down -v         # полностью удаляет данные
+```
+
+---
+
+### Локальный способ (без Docker):
+
+```bash
+cd backend && alembic upgrade head && python -m seed
+uvicorn main:app --port 8000          # терминал 1
+cd frontend && BACKEND_URL=http://127.0.0.1:8000 npm run build
+node .output/server/index.mjs          # терминал 2 → http://localhost:3000
+```
+
+---
 
 ## 1. Технологический стек
 
@@ -27,7 +78,7 @@ CheckStock отвечает на вопрос **«где сейчас товар
 
 ## 2. Архитектура
 
-**Clean Architecture + Modular Monolith + Event-Driven Architecture** (один деплой, без микросервисов).
+**Clean Architecture + Modular Monolith + Event-Driven Architecture**.
 
 ```
 backend/src/
@@ -104,46 +155,7 @@ Shipment FBO: DRAFT → IN_TRANSIT → RECEIVED  (DRAFT → CANCELLED)
 
 ---
 
-## 5. Запуск
-
-### Требования
-- Docker и Docker Compose (проверено на Docker Engine 29+).
-
-### Шаги
-
-```bash
-# 1. Клонировать репозиторий
-git clone <repo-url> checkstock && cd checkstock
-
-# 2. Настроить окружение (необязательно — есть дефолты)
-cp .env.example .env
-#   WB_API_TOKEN оставьте пустым для локального демо-режима
-
-# 3. Собрать и запустить
-docker compose up --build -d
-
-# 4. Проверить статус
-docker compose ps
-```
-
-После запуска:
-- **Frontend**: http://localhost:3000
-- **Backend API / Swagger**: http://localhost:8000/docs
-- **RabbitMQ Management**: http://localhost:15672 (логин/пароль `checkstock`/`checkstock` по умолчанию)
-
-При старте `backend` автоматически применяет миграции Alembic и идемпотентно заполняет тестовые
-данные (магазин «Ракета», ФФ «Север» и «Юг», товары SKU-101/102/103 и начальные остатки).
-
-### Остановка
-
-```bash
-docker compose down            # сохраняет данные (volumes)
-docker compose down -v         # полностью удаляет данные
-```
-
----
-
-## 6. Тестовые данные
+## 5. Тестовые данные
 
 | SKU | Товар | Север | Юг |
 |---|---|---|---|
@@ -153,7 +165,7 @@ docker compose down -v         # полностью удаляет данные
 
 ---
 
-## 7. Тестирование
+## 6. Тестирование
 
 ```bash
 # Backend: установить зависимости
@@ -178,7 +190,7 @@ pytest
 
 ---
 
-## 8. Справочник API
+## 7. Справочник API
 
 Базовый префикс `/api/v1`. Единый формат ошибок:
 
@@ -277,7 +289,7 @@ curl -X POST http://localhost:8000/api/v1/operations/shipments/fbo \
 
 ---
 
-## 9. Архитектурные решения
+## 8. Архитектурные решения
 
 ### Зачем Clean Architecture
 Складская логика — это чистая функция над остатками; она не должна зависеть от ORM, HTTP или
@@ -326,7 +338,7 @@ curl -X POST http://localhost:8000/api/v1/operations/shipments/fbo \
 
 ---
 
-## 10. Структура репозитория
+## 9. Структура репозитория
 
 ```
 .

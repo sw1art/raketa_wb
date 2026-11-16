@@ -9,6 +9,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.entities import Product, Stock, Store, Warehouse
+from domain.enums import OperationType
 from infrastructure.database.models import Operation as OperationModel
 from infrastructure.database.models import Product as ProductModel
 from infrastructure.database.models import Reservation as ReservationModel
@@ -192,6 +193,8 @@ class WarehouseRepository:
                 OperationModel,
                 (OperationModel.source_warehouse_id == warehouse_id)
                 | (OperationModel.target_warehouse_id == warehouse_id),
+                # Архивация — это маркер, а не использование склада.
+                OperationModel.type != OperationType.WAREHOUSE_ARCHIVE,
             ),
             "movements": await _count(
                 StockMovementModel,
