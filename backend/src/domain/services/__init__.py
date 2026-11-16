@@ -1,6 +1,6 @@
 """Domain services — re-exported for convenience."""
 
-from .archive import ArchiveCheck, NonZeroStock, check_archive
+from .archive import ArchiveCheck, NonZeroStock, PurgeCheck, check_archive, check_purge
 from .state_machine import (
     FBO_SHIPMENT_TRANSITIONS,
     RESERVATION_TRANSITIONS,
@@ -29,12 +29,14 @@ __all__ = [
     "ArchiveCheck",
     "InvalidStateTransition",
     "NonZeroStock",
+    "PurgeCheck",
     "assert_transition",
     "available",
     "can_deduct",
     "can_reserve",
     "can_transition",
     "check_archive",
+    "check_purge",
     "deduct",
     "deduct_available",
     "deduct_physical",

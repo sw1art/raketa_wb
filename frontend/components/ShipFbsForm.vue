@@ -2,6 +2,7 @@
 import type { ReservationView } from '~/types/api'
 import { useApi } from '~/composables/useApi'
 import { useAsyncAction } from '~/composables/useAsyncAction'
+import { useConfirm } from '~/composables/useConfirm'
 
 const props = defineProps<{
   reservations: ReservationView[]
@@ -13,6 +14,7 @@ const emit = defineEmits<{
 
 const api = useApi()
 const { submitting, error, run } = useAsyncAction()
+const { confirm } = useConfirm()
 
 const reservationId = ref('')
 
@@ -31,7 +33,14 @@ function onChange(e: Event): void {
 async function submit(): Promise<void> {
   const r = selected.value
   if (!r) return
-  if (!window.confirm(`Отправить ${r.quantity} шт. товара «${r.sku}» со склада «${r.warehouse_name}» (FBS)?`)) return
+
+  const okConfirm = await confirm({
+    title: 'Отправка FBS',
+    message: `Отправить ${r.quantity} шт. товара «${r.sku}» со склада «${r.warehouse_name}» (FBS)?`,
+    confirmText: 'Отправить FBS',
+    danger: true,
+  })
+  if (!okConfirm) return
 
   const ok = await run(() => api.shipFbs({ reservation_id: r.id }))
   if (ok) {

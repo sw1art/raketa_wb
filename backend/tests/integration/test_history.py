@@ -1,4 +1,5 @@
 """Integration tests for the operations history (regression for the 500 bug)."""
+
 from __future__ import annotations
 
 from application.commands import ListQuery, ReceiveStockCommand, ReserveStockCommand

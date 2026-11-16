@@ -2,6 +2,7 @@
 import type { Product, Warehouse } from '~/types/api'
 import { useApi } from '~/composables/useApi'
 import { useAsyncAction } from '~/composables/useAsyncAction'
+import { useConfirm } from '~/composables/useConfirm'
 
 const props = defineProps<{
   products: Product[]
@@ -14,6 +15,7 @@ const emit = defineEmits<{
 
 const api = useApi()
 const { submitting, error, run } = useAsyncAction()
+const { confirm } = useConfirm()
 
 const sourceWarehouseId = ref('')
 const productId = ref('')
@@ -39,7 +41,13 @@ async function submit(): Promise<void> {
   if (qty === null) return
   const wh = props.warehouses.find((w) => w.id === sourceWarehouseId.value)
   const p = props.products.find((x) => x.id === productId.value)
-  if (!window.confirm(`Создать FBO-отправку ${qty} шт. товара «${p?.sku ?? ''}» со склада «${wh?.name ?? ''}» на Wildberries?`)) return
+
+  const okConfirm = await confirm({
+    title: 'Отправка FBO',
+    message: `Создать FBO-отправку ${qty} шт. товара «${p?.sku ?? ''}» со склада «${wh?.name ?? ''}» на Wildberries?`,
+    confirmText: 'Создать отправку',
+  })
+  if (!okConfirm) return
 
   const ok = await run(() =>
     api.createFbo({

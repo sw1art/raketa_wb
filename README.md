@@ -18,7 +18,7 @@ CheckStock отвечает на вопрос **«где сейчас товар
 |---|---|
 | Backend | Python 3.12, FastAPI, SQLAlchemy 2 (async), asyncpg, Alembic, Pydantic 2 |
 | Messaging | RabbitMQ, aio-pika, Transactional Outbox |
-| Frontend | Nuxt 3, Vue 3, TypeScript, Composition API, `$fetch` |
+| Frontend | Nuxt 3, Vue 3, TypeScript, Composition API |
 | Infra | Docker, Docker Compose, PostgreSQL 16, RabbitMQ 3.13 |
 | Integration | Wildberries API (httpx) |
 | Tests | pytest, pytest-asyncio |
@@ -202,6 +202,7 @@ pytest
 | POST | `/warehouses` | Создать склад |
 | PATCH | `/warehouses/{id}` | Переименовать склад |
 | DELETE | `/warehouses/{id}` | **Логически архивировать** (409, если есть остатки/открытые операции) |
+| DELETE | `/warehouses/{id}/purge` | **Полностью удалить архивный склад** (409, если на него есть ссылки/история) |
 
 ### Остатки — `Stocks`
 | Метод | URL | Описание |

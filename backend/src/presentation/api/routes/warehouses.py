@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, Query
 from application.commands import (
     ArchiveWarehouseCommand,
     CreateWarehouseCommand,
+    PurgeWarehouseCommand,
     RenameWarehouseCommand,
 )
 from application.use_cases import (
@@ -17,6 +18,7 @@ from application.use_cases import (
     CreateWarehouseUseCase,
     GetWarehouseUseCase,
     ListWarehousesUseCase,
+    PurgeWarehouseUseCase,
     RenameWarehouseUseCase,
 )
 from domain.repositories.interfaces import UnitOfWork
@@ -104,5 +106,23 @@ async def archive_warehouse(warehouse_id: UUID, uow: UnitOfWork = Depends(get_uo
     """
     warehouse = await ArchiveWarehouseUseCase().execute(
         uow, ArchiveWarehouseCommand(warehouse_id=warehouse_id)
+    )
+    return WarehouseOut.model_validate(warehouse)
+
+
+@router.delete(
+    "/{warehouse_id}/purge",
+    response_model=WarehouseOut,
+    summary="Полностью удалить архивный склад",
+    response_description="Удалённый склад. 409, если на склад есть ссылки (история сохраняется).",
+)
+async def purge_warehouse(warehouse_id: UUID, uow: UnitOfWork = Depends(get_uow)) -> WarehouseOut:
+    """Физически удаляет уже архивированный склад.
+
+    Допустимо только если склад нигде не использовался (нет остатков, резервов,
+    перемещений, отправок, операций и движений) — иначе история будет нарушена.
+    """
+    warehouse = await PurgeWarehouseUseCase().execute(
+        uow, PurgeWarehouseCommand(warehouse_id=warehouse_id)
     )
     return WarehouseOut.model_validate(warehouse)

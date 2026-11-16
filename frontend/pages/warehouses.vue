@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Warehouse, WarehouseStockRow } from '~/types/api'
 import { useApi } from '~/composables/useApi'
+import { useConfirm } from '~/composables/useConfirm'
 
 interface WarehouseStockLine extends WarehouseStockRow {
   product_id: string
@@ -9,6 +10,7 @@ interface WarehouseStockLine extends WarehouseStockRow {
 }
 
 const api = useApi()
+const { confirm } = useConfirm()
 
 const { data: warehouses, pending: pendingWh, error: errorWh, refresh: refreshWh } =
   await useAsyncData('warehouses', () => api.listWarehouses())
@@ -113,7 +115,13 @@ const archiveSubmitting = ref(false)
 const archiveErrors = ref<Record<string, unknown>>({})
 
 async function archive(wh: Warehouse): Promise<void> {
-  if (!window.confirm(`Архивировать склад «${wh.name}»? Это действие нельзя отменить.`)) return
+  const okConfirm = await confirm({
+    title: 'Архивирование склада',
+    message: `Архивировать склад «${wh.name}»? Это действие можно отменить — архив не удаляет данные.`,
+    confirmText: 'Архивировать',
+    danger: true,
+  })
+  if (!okConfirm) return
   archiveSubmitting.value = true
   delete archiveErrors.value[wh.id]
   try {
@@ -123,6 +131,30 @@ async function archive(wh: Warehouse): Promise<void> {
     archiveErrors.value[wh.id] = err
   } finally {
     archiveSubmitting.value = false
+  }
+}
+
+// Full delete (purge) — only for archived warehouses without history
+const purgeSubmitting = ref(false)
+const purgeErrors = ref<Record<string, unknown>>({})
+
+async function purge(wh: Warehouse): Promise<void> {
+  const okConfirm = await confirm({
+    title: 'Полное удаление склада',
+    message: `Полностью удалить склад «${wh.name}»? Будут удалены только его данные; история не пострадает. Это действие нельзя отменить.`,
+    confirmText: 'Удалить полностью',
+    danger: true,
+  })
+  if (!okConfirm) return
+  purgeSubmitting.value = true
+  delete purgeErrors.value[wh.id]
+  try {
+    await api.purgeWarehouse(wh.id)
+    await refreshAll()
+  } catch (err) {
+    purgeErrors.value[wh.id] = err
+  } finally {
+    purgeSubmitting.value = false
   }
 }
 
@@ -177,6 +209,11 @@ function toggleExpand(id: string): void {
               Архив
             </button>
           </div>
+          <div v-else class="warehouse-card__actions">
+            <button class="btn btn--sm btn--danger" :disabled="purgeSubmitting" @click="purge(wh)">
+              Удалить полностью
+            </button>
+          </div>
         </div>
 
         <div v-if="editingId === wh.id" class="inline-form" style="margin-top: 12px">
@@ -189,6 +226,7 @@ function toggleExpand(id: string): void {
 
         <ErrorAlert :error="renameError" />
         <ErrorAlert :error="archiveErrors[wh.id] ?? null" />
+        <ErrorAlert :error="purgeErrors[wh.id] ?? null" />
 
         <div class="warehouse-card__stats">
           <div class="stat">

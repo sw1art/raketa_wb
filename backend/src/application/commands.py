@@ -39,6 +39,11 @@ class ArchiveWarehouseCommand:
 
 
 @dataclass(frozen=True)
+class PurgeWarehouseCommand:
+    warehouse_id: UUID
+
+
+@dataclass(frozen=True)
 class ReceiveStockCommand:
     warehouse_id: UUID
     product_id: UUID

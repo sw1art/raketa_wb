@@ -41,3 +41,21 @@ def check_archive(
         reasons=reasons,
         nonzero_stocks=nonzero_stocks,
     )
+
+
+@dataclass
+class PurgeCheck:
+    """Результат проверки возможности полного (физического) удаления склада."""
+
+    allowed: bool
+    references: dict[str, int] = field(default_factory=dict)
+
+
+def check_purge(references: dict[str, int]) -> PurgeCheck:
+    """Полное удаление допустимо, только если на склад ничего не ссылается.
+
+    История операций и движений должна сохраняться, поэтому склад, участвовавший
+    хотя бы в одной операции/движении, физически удалить нельзя.
+    """
+    active = {name: count for name, count in references.items() if count > 0}
+    return PurgeCheck(allowed=not active, references=active)

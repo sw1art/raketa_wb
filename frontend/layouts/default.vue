@@ -7,5 +7,6 @@
       </div>
     </main>
     <ToastStack />
+    <ConfirmModal />
   </div>
 </template>

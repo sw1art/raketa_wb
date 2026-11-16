@@ -9,10 +9,20 @@ from domain.entities import Warehouse
 from domain.enums import OperationType
 from domain.events import EVENT_WAREHOUSE_ARCHIVED, make_event
 from domain.repositories.interfaces import UnitOfWork
-from domain.services.archive import NonZeroStock, check_archive
+from domain.services.archive import NonZeroStock, check_archive, check_purge
 
-from ..commands import ArchiveWarehouseCommand, CreateWarehouseCommand, RenameWarehouseCommand
-from ..exceptions import ConflictError, NotFoundError, WarehouseArchiveError
+from ..commands import (
+    ArchiveWarehouseCommand,
+    CreateWarehouseCommand,
+    PurgeWarehouseCommand,
+    RenameWarehouseCommand,
+)
+from ..exceptions import (
+    ConflictError,
+    NotFoundError,
+    WarehouseArchiveError,
+    WarehousePurgeError,
+)
 from .base import UseCase, make_operation, new_id
 
 
@@ -99,9 +109,10 @@ class ArchiveWarehouseUseCase(UseCase):
         warehouse.archived_at = datetime.now(UTC)
         archived = await uow.warehouses.update(warehouse)
 
+        # Запись об архивировании не должна ссылаться на склад через FK (иначе
+        # архивный склад нельзя будет полностью удалить). Связь храним в entity_id.
         operation = make_operation(
             OperationType.WAREHOUSE_ARCHIVE,
-            source_warehouse_id=cmd.warehouse_id,
             entity_type="warehouse",
             entity_id=cmd.warehouse_id,
         )
@@ -115,3 +126,47 @@ class ArchiveWarehouseUseCase(UseCase):
             )
         )
         return archived
+
+
+_REFERENCE_LABELS = {
+    "stocks": "остатки",
+    "reservations": "резервы",
+    "transfers": "перемещения",
+    "shipments": "отправки",
+    "operations": "операции",
+    "movements": "движения товара",
+}
+
+
+class PurgeWarehouseUseCase(UseCase):
+    """Полное (физическое) удаление архивированного склада.
+
+    Допустимо только если на склад ничего не ссылается — иначе будет нарушена
+    сохранность истории операций и движений (обязательное требование ТЗ).
+    """
+
+    async def _run(self, uow: UnitOfWork, cmd: PurgeWarehouseCommand) -> Warehouse:
+        warehouse = await uow.warehouses.get(cmd.warehouse_id)
+        if warehouse is None:
+            raise NotFoundError(f"warehouse {cmd.warehouse_id} not found")
+        if warehouse.is_active:
+            raise ConflictError(
+                f"warehouse '{warehouse.name}' must be archived before full deletion"
+            )
+
+        references = await uow.warehouses.references(cmd.warehouse_id)
+        check = check_purge(references)
+        if not check.allowed:
+            reasons = [
+                f"{_REFERENCE_LABELS.get(name, name)}: {count}"
+                for name, count in check.references.items()
+            ]
+            raise WarehousePurgeError(
+                f"cannot delete warehouse '{warehouse.name}': history must be preserved",
+                warehouse_id=str(cmd.warehouse_id),
+                reasons=reasons,
+                references=check.references,
+            )
+
+        await uow.warehouses.delete(cmd.warehouse_id)
+        return warehouse

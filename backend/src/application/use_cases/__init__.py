@@ -27,6 +27,7 @@ from .warehouses import (
     CreateWarehouseUseCase,
     GetWarehouseUseCase,
     ListWarehousesUseCase,
+    PurgeWarehouseUseCase,
     RenameWarehouseUseCase,
 )
 from .wildberries import GetWildberriesStatusUseCase, SyncWildberriesUseCase
@@ -54,6 +55,7 @@ __all__ = [
     "ListShipmentsUseCase",
     "ListTransfersUseCase",
     "ListWarehousesUseCase",
+    "PurgeWarehouseUseCase",
     "ReceiveFBOShipmentUseCase",
     "ReceiveStockUseCase",
     "ReceiveTransferUseCase",

@@ -2,6 +2,7 @@
 import type { Product, Warehouse } from '~/types/api'
 import { useApi } from '~/composables/useApi'
 import { useAsyncAction } from '~/composables/useAsyncAction'
+import { useConfirm } from '~/composables/useConfirm'
 
 const props = defineProps<{
   products: Product[]
@@ -14,6 +15,7 @@ const emit = defineEmits<{
 
 const api = useApi()
 const { submitting, error, run } = useAsyncAction()
+const { confirm } = useConfirm()
 
 const warehouseId = ref('')
 const productId = ref('')
@@ -39,7 +41,13 @@ async function submit(): Promise<void> {
   if (qty === null) return
   const wh = props.warehouses.find((w) => w.id === warehouseId.value)
   const p = props.products.find((x) => x.id === productId.value)
-  if (!window.confirm(`Приход ${qty} шт. товара «${p?.sku ?? ''}» на склад «${wh?.name ?? ''}»?`)) return
+
+  const okConfirm = await confirm({
+    title: 'Приход товара',
+    message: `Приход ${qty} шт. товара «${p?.sku ?? ''}» на склад «${wh?.name ?? ''}»?`,
+    confirmText: 'Принять',
+  })
+  if (!okConfirm) return
 
   const ok = await run(() =>
     api.receiveStock({ warehouse_id: warehouseId.value, product_id: productId.value, quantity: qty }),

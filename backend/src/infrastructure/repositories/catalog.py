@@ -4,14 +4,19 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.entities import Product, Stock, Store, Warehouse
+from infrastructure.database.models import Operation as OperationModel
 from infrastructure.database.models import Product as ProductModel
+from infrastructure.database.models import Reservation as ReservationModel
+from infrastructure.database.models import Shipment as ShipmentModel
 from infrastructure.database.models import Stock as StockModel
+from infrastructure.database.models import StockMovement as StockMovementModel
 from infrastructure.database.models import Store as StoreModel
+from infrastructure.database.models import Transfer as TransferModel
 from infrastructure.database.models import Warehouse as WarehouseModel
 
 
@@ -126,8 +131,14 @@ class WarehouseRepository:
         return _warehouse_to_domain(model) if model else None
 
     async def get_by_name(self, name: str) -> Warehouse | None:
+        """Возвращает АКТИВНЫЙ склад по имени.
+
+        Имя архивированного склада свободно для переиспользования.
+        """
         model = await self._session.scalar(
-            select(WarehouseModel).where(WarehouseModel.name == name)
+            select(WarehouseModel).where(
+                WarehouseModel.name == name, WarehouseModel.is_active.is_(True)
+            )
         )
         return _warehouse_to_domain(model) if model else None
 
@@ -149,6 +160,45 @@ class WarehouseRepository:
         )
         await self._session.flush()
         return warehouse
+
+    async def delete(self, warehouse_id: UUID) -> None:
+        """Физически удаляет склад (только для полного удаления архивированного склада)."""
+        await self._session.execute(delete(WarehouseModel).where(WarehouseModel.id == warehouse_id))
+        await self._session.flush()
+
+    async def references(self, warehouse_id: UUID) -> dict[str, int]:
+        """Считает, сколько записей ссылаются на склад (проверка перед полным удалением)."""
+
+        async def _count(model, *conditions):
+            value = await self._session.scalar(
+                select(func.count()).select_from(model).where(*conditions)
+            )
+            return int(value or 0)
+
+        return {
+            "stocks": await _count(StockModel, StockModel.warehouse_id == warehouse_id),
+            "reservations": await _count(
+                ReservationModel, ReservationModel.warehouse_id == warehouse_id
+            ),
+            "transfers": await _count(
+                TransferModel,
+                (TransferModel.source_warehouse_id == warehouse_id)
+                | (TransferModel.target_warehouse_id == warehouse_id),
+            ),
+            "shipments": await _count(
+                ShipmentModel, ShipmentModel.source_warehouse_id == warehouse_id
+            ),
+            "operations": await _count(
+                OperationModel,
+                (OperationModel.source_warehouse_id == warehouse_id)
+                | (OperationModel.target_warehouse_id == warehouse_id),
+            ),
+            "movements": await _count(
+                StockMovementModel,
+                (StockMovementModel.source_warehouse_id == warehouse_id)
+                | (StockMovementModel.target_warehouse_id == warehouse_id),
+            ),
+        }
 
     async def list(self, *, active_only: bool = False) -> list[Warehouse]:
         stmt = select(WarehouseModel)

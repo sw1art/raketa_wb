@@ -126,6 +126,7 @@ export function useApi() {
     renameWarehouse: (id: string, body: RenameWarehouseRequest) =>
       request<Warehouse>(`/warehouses/${id}`, 'PATCH', { body }),
     archiveWarehouse: (id: string) => request<Warehouse>(`/warehouses/${id}`, 'DELETE'),
+    purgeWarehouse: (id: string) => request<Warehouse>(`/warehouses/${id}/purge`, 'DELETE'),
 
     // Stocks
     getStocks: (query?: Query) => request<StocksOverview>('/stocks', 'GET', { query }),

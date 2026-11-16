@@ -87,3 +87,24 @@ class WarehouseArchiveError(ConflictError):
 
 class IdempotencyConflictError(ConflictError):
     code = "idempotency_conflict"
+
+
+class WarehousePurgeError(ConflictError):
+    code = "warehouse_purge_error"
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        warehouse_id: str,
+        reasons: list[str],
+        references: dict[str, int],
+    ) -> None:
+        super().__init__(
+            message,
+            detail={
+                "warehouse_id": warehouse_id,
+                "reasons": reasons,
+                "references": references,
+            },
+        )

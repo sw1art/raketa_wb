@@ -2,6 +2,7 @@
 import type { Product, Shipment, TransferView, Warehouse } from '~/types/api'
 import { useApi } from '~/composables/useApi'
 import { useAsyncAction } from '~/composables/useAsyncAction'
+import { useConfirm } from '~/composables/useConfirm'
 
 const props = defineProps<{
   transfers: TransferView[]
@@ -16,6 +17,7 @@ const emit = defineEmits<{
 
 const api = useApi()
 const { submitting, error, run } = useAsyncAction()
+const { confirm } = useConfirm()
 
 const draftTransfers = computed<TransferView[]>(() => props.transfers.filter((t) => t.status === 'DRAFT'))
 const inTransitTransfers = computed<TransferView[]>(() => props.transfers.filter((t) => t.status === 'IN_TRANSIT'))
@@ -41,25 +43,45 @@ function shipmentWarehouse(s: Shipment): string {
 }
 
 async function dispatchTransfer(t: TransferView): Promise<void> {
-  if (!window.confirm(`Отправить перемещение со склада «${t.source_warehouse_name}» на «${t.target_warehouse_name}»?`)) return
+  const okConfirm = await confirm({
+    title: 'Отправить перемещение',
+    message: `Отправить перемещение со склада «${t.source_warehouse_name}» на «${t.target_warehouse_name}»?`,
+    confirmText: 'Отправить',
+  })
+  if (!okConfirm) return
   const ok = await run(() => api.dispatchTransfer(t.id))
   if (ok) emit('success')
 }
 
 async function receiveTransfer(t: TransferView): Promise<void> {
-  if (!window.confirm(`Принять перемещение на склад «${t.target_warehouse_name}»?`)) return
+  const okConfirm = await confirm({
+    title: 'Принять перемещение',
+    message: `Принять перемещение на склад «${t.target_warehouse_name}»?`,
+    confirmText: 'Принять',
+  })
+  if (!okConfirm) return
   const ok = await run(() => api.receiveTransfer(t.id))
   if (ok) emit('success')
 }
 
 async function dispatchShipment(s: Shipment): Promise<void> {
-  if (!window.confirm(`Отправить FBO-отправку со склада «${shipmentWarehouse(s)}» на Wildberries?`)) return
+  const okConfirm = await confirm({
+    title: 'Отправить FBO',
+    message: `Отправить FBO-отправку со склада «${shipmentWarehouse(s)}» на Wildberries?`,
+    confirmText: 'Отправить',
+  })
+  if (!okConfirm) return
   const ok = await run(() => api.dispatchShipment(s.id))
   if (ok) emit('success')
 }
 
 async function receiveShipment(s: Shipment): Promise<void> {
-  if (!window.confirm(`Подтвердить приёмку FBO-отправки на Wildberries?`)) return
+  const okConfirm = await confirm({
+    title: 'Приёмка FBO',
+    message: 'Подтвердить приёмку FBO-отправки на Wildberries?',
+    confirmText: 'Принять',
+  })
+  if (!okConfirm) return
   const ok = await run(() => api.receiveShipment(s.id))
   if (ok) emit('success')
 }

@@ -42,6 +42,11 @@ body {
   padding: 0;
 }
 
+html {
+  /* Резервируем место под скроллбар, чтобы блокировка прокрутки не сдвигала контент */
+  scrollbar-gutter: stable;
+}
+
 body {
   font-family: var(--font);
   background: linear-gradient(180deg, #f7f9fd 0%, var(--bg) 220px);
@@ -713,6 +718,70 @@ h4 {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Confirm modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(2px);
+}
+
+.modal {
+  width: 100%;
+  max-width: 460px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.32);
+}
+
+.modal__title {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.modal__message {
+  color: var(--text-muted);
+  font-size: 14.5px;
+  line-height: 1.55;
+  margin: 0 0 22px;
+  white-space: pre-line;
+}
+
+.modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.18s ease;
+}
+
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+}
+
+.modal-fade-enter-active .modal,
+.modal-fade-leave-active .modal {
+  transition: transform 0.18s ease;
+}
+
+.modal-fade-enter-from .modal,
+.modal-fade-leave-to .modal {
+  transform: scale(0.96) translateY(8px);
 }
 
 /* Loading */

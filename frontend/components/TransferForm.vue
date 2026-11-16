@@ -2,6 +2,7 @@
 import type { Product, Warehouse } from '~/types/api'
 import { useApi } from '~/composables/useApi'
 import { useAsyncAction } from '~/composables/useAsyncAction'
+import { useConfirm } from '~/composables/useConfirm'
 
 const props = defineProps<{
   products: Product[]
@@ -14,6 +15,7 @@ const emit = defineEmits<{
 
 const api = useApi()
 const { submitting, error, run } = useAsyncAction()
+const { confirm } = useConfirm()
 
 const sourceWarehouseId = ref('')
 const targetWarehouseId = ref('')
@@ -50,7 +52,13 @@ async function submit(): Promise<void> {
   const src = props.warehouses.find((w) => w.id === sourceWarehouseId.value)
   const tgt = props.warehouses.find((w) => w.id === targetWarehouseId.value)
   const p = props.products.find((x) => x.id === productId.value)
-  if (!window.confirm(`Переместить ${qty} шт. товара «${p?.sku ?? ''}» со склада «${src?.name ?? ''}» на «${tgt?.name ?? ''}»?`)) return
+
+  const okConfirm = await confirm({
+    title: 'Перемещение',
+    message: `Переместить ${qty} шт. товара «${p?.sku ?? ''}» со склада «${src?.name ?? ''}» на «${tgt?.name ?? ''}»?`,
+    confirmText: 'Создать перемещение',
+  })
+  if (!okConfirm) return
 
   const ok = await run(() =>
     api.createTransfer({

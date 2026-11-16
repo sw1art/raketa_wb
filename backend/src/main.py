@@ -109,7 +109,7 @@ def create_app() -> FastAPI:
     register_exception_handlers(app)
     app.include_router(api_router, prefix=_settings.api_prefix)
 
-    @app.get("/healthz", tags=["health"], summary="Проверка живости сервиса")
+    @app.get("/healthz", tags=["health"], summary="Проверка состояния сервиса")
     async def healthz() -> dict:
         """Возвращает `{"status": "ok"}`, если приложение запущено."""
         return {"status": "ok"}
