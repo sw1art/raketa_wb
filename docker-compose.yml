@@ -58,6 +58,13 @@ services:
   outbox-worker:
     build: ./backend
     command: ["python", "-m", "worker"]
+    healthcheck:
+      # Проверка живости процесса (у воркера нет HTTP-интерфейса).
+      test: ["CMD", "python", "-c", "import os; os.kill(1, 0)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-checkstock}:${POSTGRES_PASSWORD:-checkstock}@postgres:5432/${POSTGRES_DB:-checkstock}
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-checkstock}:${RABBITMQ_PASSWORD:-checkstock}@rabbitmq:5672/

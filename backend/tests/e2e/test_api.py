@@ -103,3 +103,20 @@ async def test_not_found(client):
     resp = await client.get("/api/v1/products/00000000-0000-0000-0000-000000000000")
     assert resp.status_code == 404
     assert resp.json()["error"]["code"] == "not_found"
+
+
+async def test_history_endpoint(client, session_factory):
+    ids = await seed_catalog(session_factory)
+    await set_stock(session_factory, ids["p101"], ids["north"], 10)
+
+    await client.post(
+        "/api/v1/operations/receipts",
+        json={"warehouse_id": str(ids["north"]), "product_id": str(ids["p101"]), "quantity": 5},
+    )
+
+    resp = await client.get("/api/v1/history")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["total"] >= 1
+    receipt = [e for e in body["items"] if e["operation_type"] == "RECEIPT"]
+    assert receipt and receipt[0]["sku"] == "SKU-101"

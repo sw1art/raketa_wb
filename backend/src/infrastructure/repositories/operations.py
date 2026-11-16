@@ -114,7 +114,7 @@ class OperationRepository:
         )
         return _operation_to_domain(model) if model else None
 
-    async def _history_query(self):
+    def _history_query(self):
         return (
             select(OperationModel, OperationItemModel, ProductModel, _SOURCE_WH, _TARGET_WH)
             .join(OperationItemModel, OperationItemModel.operation_id == OperationModel.id)
