@@ -1,4 +1,5 @@
 """Integration tests for the mandatory business scenarios (real PostgreSQL)."""
+
 from __future__ import annotations
 
 import asyncio
@@ -248,12 +249,12 @@ async def test_scenario10_concurrent(session_factory):
         async with session_factory() as session:
             return await ReserveFBSStockUseCase().execute(
                 UnitOfWork(session),
-                ReserveStockCommand(warehouse_id=ids["north"], product_id=ids["p101"], quantity=qty),
+                ReserveStockCommand(
+                    warehouse_id=ids["north"], product_id=ids["p101"], quantity=qty
+                ),
             )
 
-    results = await asyncio.gather(
-        reserve(3), reserve(3), return_exceptions=True
-    )
+    results = await asyncio.gather(reserve(3), reserve(3), return_exceptions=True)
     succeeded = [r for r in results if isinstance(r, Reservation)]
     failed = [r for r in results if isinstance(r, StockShortageError)]
     assert len(succeeded) == 1

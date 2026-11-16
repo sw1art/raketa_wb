@@ -4,8 +4,11 @@ import { statusLabel } from '~/utils/labels'
 import { useApi } from '~/composables/useApi'
 
 const api = useApi()
+const PAGE_SIZE = 25
+
 const typeFilter = ref('')
 const statusFilter = ref('')
+const offset = ref(0)
 
 const shipmentStatuses: string[] = ['DRAFT', 'IN_TRANSIT', 'SHIPPED', 'RECEIVED', 'CANCELLED']
 
@@ -20,9 +23,10 @@ const { data: shipmentsData, pending, error, refresh } = await useAsyncData(
     api.listShipments({
       type: typeFilter.value || undefined,
       status: statusFilter.value || undefined,
-      limit: 500,
+      offset: offset.value,
+      limit: PAGE_SIZE,
     }),
-  { watch: [typeFilter, statusFilter] },
+  { watch: [typeFilter, statusFilter, offset] },
 )
 
 const shipments = computed(() => shipmentsData.value?.items ?? [])
@@ -38,6 +42,10 @@ const warehousesById = computed<Record<string, Warehouse>>(() => {
   const map: Record<string, Warehouse> = {}
   for (const w of warehouses.value ?? []) map[w.id] = w
   return map
+})
+
+watch([typeFilter, statusFilter], () => {
+  offset.value = 0
 })
 </script>
 
@@ -59,16 +67,16 @@ const warehousesById = computed<Record<string, Warehouse>>(() => {
       </div>
     </div>
 
-    <p class="page__meta">Всего: {{ total }}</p>
-
     <ErrorAlert :error="error" />
     <LoadingState v-if="pending" />
     <EmptyState v-else-if="!shipments.length" text="Отправок с выбранными фильтрами нет." />
-    <ShipmentsTable
-      v-else
-      :shipments="shipments"
-      :products-by-id="productsById"
-      :warehouses-by-id="warehousesById"
-    />
+    <template v-else>
+      <ShipmentsTable
+        :shipments="shipments"
+        :products-by-id="productsById"
+        :warehouses-by-id="warehousesById"
+      />
+      <PaginationBar v-model:offset="offset" :limit="PAGE_SIZE" :total="total" />
+    </template>
   </div>
 </template>

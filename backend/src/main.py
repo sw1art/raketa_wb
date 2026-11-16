@@ -7,15 +7,17 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+from uuid import uuid4
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
 from config.logging import configure_logging
 from config.settings import get_settings
-from infrastructure.database.session import dispose_engine
+from infrastructure.database.session import dispose_engine, engine
 from presentation.api.errors import register_exception_handlers
 from presentation.api.routes import api_router
 
@@ -67,6 +69,21 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
+class RequestIdMiddleware(BaseHTTPMiddleware):
+    """Присваивает каждому запросу корреляционный id (X-Request-ID).
+
+    Использует переданный клиентом `X-Request-ID` или генерирует UUID; возвращает
+    его в заголовке ответа и в теле ошибки для трассировки.
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        request_id = request.headers.get("X-Request-ID") or str(uuid4())
+        request.state.request_id = request_id
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+        return response
+
+
 def create_app() -> FastAPI:
     configure_logging(_settings.log_level)
     app = FastAPI(
@@ -86,6 +103,7 @@ def create_app() -> FastAPI:
         allow_methods=["GET", "POST", "PATCH", "DELETE"],
         allow_headers=["*"],
     )
+    app.add_middleware(RequestIdMiddleware)
     app.add_middleware(SecurityHeadersMiddleware)
 
     register_exception_handlers(app)
@@ -95,6 +113,18 @@ def create_app() -> FastAPI:
     async def healthz() -> dict:
         """Возвращает `{"status": "ok"}`, если приложение запущено."""
         return {"status": "ok"}
+
+    @app.get("/health", tags=["health"], summary="Статус приложения и базы данных")
+    async def health() -> dict:
+        """Проверяет доступность PostgreSQL и возвращает статус сервиса."""
+        database = "up"
+        try:
+            async with engine.connect() as conn:
+                await conn.execute(text("SELECT 1"))
+        except Exception:
+            database = "down"
+        status = "ok" if database == "up" else "degraded"
+        return {"status": status, "database": database, "version": "1.0.0"}
 
     return app
 

@@ -1,4 +1,9 @@
-"""Unified error envelope and exception handlers."""
+"""Unified error envelope and exception handlers.
+
+Every error response uses the same envelope:
+
+    {"error": {"code", "message", "detail"}, "request_id": "..."}
+"""
 
 from __future__ import annotations
 
@@ -13,6 +18,10 @@ from application.exceptions import AppError
 logger = logging.getLogger("checkstock.api")
 
 
+def _request_id(request: Request) -> str | None:
+    return getattr(request.state, "request_id", None)
+
+
 def _error_body(code: str, message: str, detail: object | None = None) -> dict:
     return {"error": {"code": code, "message": message, "detail": detail}}
 
@@ -20,22 +29,27 @@ def _error_body(code: str, message: str, detail: object | None = None) -> dict:
 async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
     return JSONResponse(
         status_code=exc.status_code,
-        content=_error_body(exc.code, exc.message, exc.detail),
+        content=_error_body(exc.code, exc.message, exc.detail)
+        | {"request_id": _request_id(request)},
     )
 
 
 async def validation_error_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
-    return JSONResponse(
-        status_code=422,
-        content=_error_body("validation_error", "request validation failed", exc.errors()),
-    )
+    body = _error_body("validation_error", "request validation failed", exc.errors())
+    return JSONResponse(status_code=422, content=body | {"request_id": _request_id(request)})
 
 
 async def unhandled_error_handler(request: Request, exc: Exception) -> JSONResponse:
-    logger.exception("unhandled error on %s %s", request.method, request.url.path)
+    logger.exception(
+        "unhandled error on %s %s",
+        request.method,
+        request.url.path,
+        extra={"request_id": _request_id(request)},
+    )
     return JSONResponse(
         status_code=500,
-        content=_error_body("internal_error", "internal server error"),
+        content=_error_body("internal_error", "internal server error")
+        | {"request_id": _request_id(request)},
     )
 
 

@@ -1,9 +1,10 @@
 """Test helpers for seeding catalog and stock."""
+
 from __future__ import annotations
 
 from uuid import UUID, uuid4
 
-from domain.entities import Product, Stock, Store, Warehouse
+from domain.entities import Product, Store, Warehouse
 from infrastructure.repositories.unit_of_work import UnitOfWork
 
 

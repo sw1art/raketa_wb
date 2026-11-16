@@ -53,5 +53,5 @@ target-version = "py312"
 select = ["E", "F", "I", "UP", "B", "RUF", "BLE"]
 # B008: FastAPI's `Depends(...)` in argument defaults is the documented idiom.
 # BLE001: reconnect/retry loops intentionally catch broadly and always log.
-# RUF001/RUF002: legitimate Russian (Cyrillic) text in docstrings/strings.
-ignore = ["B008", "BLE001", "RUF001", "RUF002"]
+# RUF001/RUF002/RUF003: legitimate Russian (Cyrillic) text in docstrings/strings/comments.
+ignore = ["B008", "BLE001", "RUF001", "RUF002", "RUF003"]

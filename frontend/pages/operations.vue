@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { Product, Warehouse } from '~/types/api'
 import { useApi } from '~/composables/useApi'
+import { useToast } from '~/composables/useToast'
 
 const api = useApi()
+const toast = useToast()
 
 const { data: productsData, pending: productsPending, error: productsError } =
   await useAsyncData('ops-products', () => api.listProducts({ limit: 500 }))
@@ -66,6 +68,11 @@ const anyPending = computed(
 async function refreshAll(): Promise<void> {
   await Promise.all([refreshReservations(), refreshTransfers(), refreshShipments()])
 }
+
+async function onSuccess(): Promise<void> {
+  toast.success('Операция успешно выполнена')
+  await refreshAll()
+}
 </script>
 
 <template>
@@ -81,30 +88,30 @@ async function refreshAll(): Promise<void> {
       <section class="section">
         <h2 class="section__title">Приход и резервирование</h2>
         <div class="card-grid">
-          <ReceiptForm :products="products" :warehouses="activeWarehouses" @success="refreshAll" />
-          <ReserveForm :products="products" :warehouses="activeWarehouses" @success="refreshAll" />
+          <ReceiptForm :products="products" :warehouses="activeWarehouses" @success="onSuccess" />
+          <ReserveForm :products="products" :warehouses="activeWarehouses" @success="onSuccess" />
         </div>
       </section>
 
       <section class="section">
         <h2 class="section__title">FBS</h2>
         <div class="card-grid">
-          <CancelReservationForm :reservations="activeReservations" @success="refreshAll" />
-          <ShipFbsForm :reservations="activeReservations" @success="refreshAll" />
+          <CancelReservationForm :reservations="activeReservations" @success="onSuccess" />
+          <ShipFbsForm :reservations="activeReservations" @success="onSuccess" />
         </div>
       </section>
 
       <section class="section">
         <h2 class="section__title">Перемещение</h2>
         <div class="card-grid">
-          <TransferForm :products="products" :warehouses="activeWarehouses" @success="refreshAll" />
+          <TransferForm :products="products" :warehouses="activeWarehouses" @success="onSuccess" />
         </div>
       </section>
 
       <section class="section">
         <h2 class="section__title">FBO</h2>
         <div class="card-grid">
-          <ShipFboForm :products="products" :warehouses="activeWarehouses" @success="refreshAll" />
+          <ShipFboForm :products="products" :warehouses="activeWarehouses" @success="onSuccess" />
         </div>
       </section>
 
@@ -115,7 +122,7 @@ async function refreshAll(): Promise<void> {
           :shipments="fboShipments"
           :products-by-id="productsById"
           :warehouses-by-id="warehousesById"
-          @success="refreshAll"
+          @success="onSuccess"
         />
       </section>
     </div>

@@ -139,6 +139,26 @@ h4 {
   color: var(--primary-strong);
 }
 
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  margin-left: auto;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.nav-toggle__bar {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: transform 0.15s, opacity 0.15s;
+}
+
 .app-main {
   flex: 1;
   padding: 28px 0 64px;
@@ -605,6 +625,96 @@ h4 {
   text-align: left;
 }
 
+/* Toasts */
+.toast-stack {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 100;
+  max-width: min(360px, calc(100vw - 40px));
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+  font-size: 14px;
+  animation: toast-in 0.2s ease-out;
+}
+
+.toast__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.toast__message {
+  flex: 1;
+  font-weight: 600;
+}
+
+.toast__close {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.toast--success {
+  border-color: #bbf7d0;
+}
+
+.toast--success .toast__icon {
+  background: var(--success-soft);
+  color: var(--success-text);
+}
+
+.toast--error {
+  border-color: #fecaca;
+}
+
+.toast--error .toast__icon {
+  background: var(--danger-soft);
+  color: var(--danger-text);
+}
+
+.toast--info {
+  border-color: #bae6fd;
+}
+
+.toast--info .toast__icon {
+  background: var(--info-soft);
+  color: var(--info-text);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Loading */
 .loading {
   display: flex;
@@ -730,6 +840,21 @@ h4 {
   margin-bottom: 8px;
 }
 
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.pagination__info {
+  color: var(--text-muted);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
 /* Responsive */
 @media (max-width: 720px) {
   .header-inner {
@@ -738,9 +863,23 @@ h4 {
     padding: 10px 0;
   }
 
+  .nav-toggle {
+    display: flex;
+  }
+
   .nav {
+    display: none;
     margin-left: 0;
     width: 100%;
+    flex-direction: column;
+  }
+
+  .nav--open {
+    display: flex;
+  }
+
+  .nav-link {
+    padding: 10px 12px;
   }
 
   .page__header {

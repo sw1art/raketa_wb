@@ -6,5 +6,6 @@
         <slot />
       </div>
     </main>
+    <ToastStack />
   </div>
 </template>

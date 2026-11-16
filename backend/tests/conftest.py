@@ -1,4 +1,5 @@
 """Shared fixtures for integration tests (real PostgreSQL)."""
+
 from __future__ import annotations
 
 import os

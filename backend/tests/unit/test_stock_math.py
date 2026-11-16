@@ -1,4 +1,5 @@
 """Unit tests for pure stock arithmetic and invariants."""
+
 from __future__ import annotations
 
 import pytest

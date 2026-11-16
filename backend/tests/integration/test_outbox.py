@@ -1,4 +1,5 @@
 """Integration tests for the transactional outbox."""
+
 from __future__ import annotations
 
 import asyncio
@@ -56,10 +57,14 @@ async def test_receipt_writes_outbox_in_same_transaction(session_factory):
 
     async with session_factory() as session:
         events = (
-            await session.execute(
-                select(OutboxEvent).where(OutboxEvent.event_type == EVENT_STOCK_RECEIVED)
+            (
+                await session.execute(
+                    select(OutboxEvent).where(OutboxEvent.event_type == EVENT_STOCK_RECEIVED)
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         assert len(events) == 1
         assert events[0].status == OutboxStatus.PENDING
 

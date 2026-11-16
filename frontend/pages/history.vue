@@ -3,8 +3,11 @@ import { operationTypeLabel } from '~/utils/labels'
 import { useApi } from '~/composables/useApi'
 
 const api = useApi()
+const PAGE_SIZE = 25
+
 const typeFilter = ref('')
 const skuFilter = ref('')
+const offset = ref(0)
 
 const operationTypes: string[] = [
   'RECEIPT',
@@ -26,13 +29,18 @@ const { data: historyData, pending, error, refresh } = await useAsyncData(
     api.listHistory({
       operation_type: typeFilter.value || undefined,
       sku: skuFilter.value || undefined,
-      limit: 500,
+      offset: offset.value,
+      limit: PAGE_SIZE,
     }),
-  { watch: [typeFilter, skuFilter] },
+  { watch: [typeFilter, skuFilter, offset] },
 )
 
 const entries = computed(() => historyData.value?.items ?? [])
 const total = computed(() => historyData.value?.total ?? 0)
+
+watch([typeFilter, skuFilter], () => {
+  offset.value = 0
+})
 </script>
 
 <template>
@@ -49,11 +57,12 @@ const total = computed(() => historyData.value?.total ?? 0)
       </div>
     </div>
 
-    <p class="page__meta">Всего записей: {{ total }}</p>
-
     <ErrorAlert :error="error" />
     <LoadingState v-if="pending" />
     <EmptyState v-else-if="!entries.length" text="Записей в истории с выбранными фильтрами нет." />
-    <HistoryTable v-else :entries="entries" />
+    <template v-else>
+      <HistoryTable :entries="entries" />
+      <PaginationBar v-model:offset="offset" :limit="PAGE_SIZE" :total="total" />
+    </template>
   </div>
 </template>

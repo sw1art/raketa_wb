@@ -1,4 +1,5 @@
 """Integration tests for listing read models (reservations, transfers)."""
+
 from __future__ import annotations
 
 from application.commands import (

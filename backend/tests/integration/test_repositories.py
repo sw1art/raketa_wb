@@ -1,4 +1,5 @@
 """Integration tests for repository constraints and locking."""
+
 from __future__ import annotations
 
 from uuid import uuid4
@@ -6,7 +7,7 @@ from uuid import uuid4
 import pytest
 from sqlalchemy.exc import IntegrityError
 
-from domain.entities import Product, Stock
+from domain.entities import Product
 from infrastructure.repositories.unit_of_work import UnitOfWork
 
 from .helpers import seed_catalog, set_stock
